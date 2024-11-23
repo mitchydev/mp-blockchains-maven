@@ -1,15 +1,20 @@
 package edu.grinnell.csc207.blockchains;
 
+import java.util.Arrays;
+
 /**
  * Encapsulated hashes.
  *
- * @author Your Name Here
+ * @author Mitchell Paiva
+ * @author Jafar Jarrar
  * @author Samuel A. Rebelsky
  */
 public class Hash {
   // +--------+------------------------------------------------------
   // | Fields |
   // +--------+
+
+  private final byte[] data;
 
   // +--------------+------------------------------------------------
   // | Constructors |
@@ -22,7 +27,10 @@ public class Hash {
    *   The data to copy into the hash.
    */
   public Hash(byte[] data) {
-    // STUB
+    if (data == null) {
+      throw new IllegalArgumentException();
+    } // if
+    this.data = Arrays.copyOf(data, data.length);
   } // Hash(byte[])
 
   // +---------+-----------------------------------------------------
@@ -35,7 +43,7 @@ public class Hash {
    * @return the number of bytes in the hash.
    */
   public int length() {
-    return 0;   // STUB
+    return data.length;
   } // length()
 
   /**
@@ -48,7 +56,10 @@ public class Hash {
    * @return the ith byte
    */
   public byte get(int i) {
-    return 0;   // STUB
+    if (i < 0 || i >= data.length) {
+      throw new IndexOutOfBoundsException();
+    } // if
+    return data[i];
   } // get()
 
   /**
@@ -58,7 +69,7 @@ public class Hash {
    * @return a copy of the bytes in the hash.
    */
   public byte[] getBytes() {
-    return new byte[] {1, 2, 3, 4, 5};      // STUB
+    return Arrays.copyOf(data, data.length);
   } // getBytes()
 
   /**
@@ -67,7 +78,11 @@ public class Hash {
    * @return the hash as a hex string.
    */
   public String toString() {
-    return "";          // STUB
+    String toString = "";
+    for (int i = 0; i < data.length; i++) {
+      toString += String.format("%02X", Byte.toUnsignedInt(data[i]));
+    } // for
+    return toString;
   } // toString()
 
   /**
@@ -80,7 +95,14 @@ public class Hash {
    *   otherwise.
    */
   public boolean equals(Object other) {
-    return false;       // STUB
+    if (this == other) {
+      return true;
+    } // if
+    if (!(other instanceof Hash)) {
+      return false;
+    } // if
+    Hash secondHash = (Hash) other;
+    return Arrays.equals(this.data, secondHash.data);
   } // equals(Object)
 
   /**
