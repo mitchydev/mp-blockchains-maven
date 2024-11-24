@@ -95,9 +95,6 @@ public class Hash {
    *   otherwise.
    */
   public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    } // if
     if (!(other instanceof Hash)) {
       return false;
     } // if

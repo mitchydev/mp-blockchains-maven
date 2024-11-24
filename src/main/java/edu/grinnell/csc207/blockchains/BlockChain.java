@@ -1,5 +1,6 @@
 package edu.grinnell.csc207.blockchains;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -44,7 +45,7 @@ public class BlockChain implements Iterable<Transaction> {
    *
    * @return a new block with correct number, hashes, and such.
    */
-  public Block mine(Transaction t) {
+  public Block mine(Transaction t) throws NoSuchAlgorithmException {
     return new Block(10, t, new Hash(new byte[] {7}), 11);       // STUB
   } // mine(Transaction)
 
