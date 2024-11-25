@@ -64,7 +64,7 @@ public class Block {
    *   The validator used to check the block.
    */
   public Block(int num, Transaction transaction, Hash prevHash,
-      HashValidator check) throws NoSuchAlgorithmException {
+      HashValidator check) {
     this.blockNum = num;
     this.transaction = transaction;
     this.prevBlockHash = prevHash;
@@ -84,28 +84,35 @@ public class Block {
    * @param nonce
    *   The nonce of the block.
    */
-  public Block(int num, Transaction transaction, Hash prevHash, long nonce)
-    throws NoSuchAlgorithmException {
+  public Block(int num, Transaction transaction, Hash prevHash, long nonce) {
     this.blockNum = num;
     this.transaction = transaction;
     this.prevBlockHash = prevHash;
     this.nonce = nonce;
-    this.blockHash = computeHash();
+    try {
+      this.blockHash = computeHash();
+    } catch (NoSuchAlgorithmException e) {
+      // Does Nothing
+    } // try/catch
   } // Block(int, Transaction, Hash, long)
 
   /**
    * Looks for a valid nonce given the hashValidator check. Sets the block nonce
    * and the block hash to the values that pass the check.
    */
-  public void mine() throws NoSuchAlgorithmException {
+  public void mine() {
     for (long tempNonce = 0; tempNonce < Long.MAX_VALUE; tempNonce++) {
-      this.nonce = tempNonce;
-      Hash temp = computeHash();
-      if (validator.isValid(temp)) {
-        this.blockHash = temp;
-        break;
-      } // if
-      this.nonce = 0;
+      try {
+        this.nonce = tempNonce;
+        Hash temp = computeHash();
+        if (validator.isValid(temp)) {
+          this.blockHash = temp;
+          break;
+        } // if
+        this.nonce = 0;
+      } catch (NoSuchAlgorithmException e) {
+        // Does Nothing
+      } // try/catch
     } // for
   } // mine()
 

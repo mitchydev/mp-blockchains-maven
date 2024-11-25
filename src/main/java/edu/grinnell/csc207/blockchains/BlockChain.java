@@ -1,6 +1,9 @@
 package edu.grinnell.csc207.blockchains;
 
 import java.security.NoSuchAlgorithmException;
+import edu.grinnell.csc207.blockchains.Block;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -14,6 +17,23 @@ public class BlockChain implements Iterable<Transaction> {
   // | Fields |
   // +--------+
 
+  /**
+   * The first block in the blockchain.
+   */
+  Block firstBlock;
+
+  // HashValidator simpleValidator;
+
+  // HashValidator standardValidator =
+  //   (hash) -> (hash.length() >= 3) && (hash.get(0) == 0)
+  //     && (hash.get(1) == 0) && (hash.get(2) == 0);
+
+  HashValidator validator;
+
+  ArrayList<String> userNames;
+
+  int numBlocks;
+
   // +--------------+------------------------------------------------
   // | Constructors |
   // +--------------+
@@ -25,12 +45,42 @@ public class BlockChain implements Iterable<Transaction> {
    *   The validator used to check elements.
    */
   public BlockChain(HashValidator check) {
-    // STUB
+    this.firstBlock = new Block(0, new Transaction("", "", 0), new Hash(new byte[] {}), check);
+    // simpleValidator = (hash) -> (hash.length() >= 1) && (hash.get(0) == 0);
+    // standardValidator =
+    //   (hash) -> (hash.length() >= 3) && (hash.get(0) == 0)
+    //   && (hash.get(1) == 0) && (hash.get(2) == 0);
+    this.validator = check;
+    this.userNames = new ArrayList<String>();
+    numBlocks = 1;
   } // BlockChain(HashValidator)
 
   // +---------+-----------------------------------------------------
   // | Helpers |
   // +---------+
+
+  public boolean validTransaction (Transaction transaction) {
+    if (transaction.getAmount() < 0) {
+      return false;
+    } else if (!userNames.contains(transaction.getSource())) {
+      return false;
+    } else if (balance(transaction.getSource()) < transaction.getAmount()) {
+      return false;
+    } // if
+    return true;
+  } // validTransaction(Transaction)
+
+  public boolean validHashContents (Block blk) {
+    try {
+      Hash correctHash = blk.computeHash();
+      if (!blk.getHash().equals(correctHash)) {
+        return false;
+      } // if
+    } catch (NoSuchAlgorithmException e) {
+      // Does nothing
+    } // try/catch
+    return true;
+  }
 
   // +---------+-----------------------------------------------------
   // | Methods |
@@ -45,8 +95,8 @@ public class BlockChain implements Iterable<Transaction> {
    *
    * @return a new block with correct number, hashes, and such.
    */
-  public Block mine(Transaction t) throws NoSuchAlgorithmException {
-    return new Block(10, t, new Hash(new byte[] {7}), 11);       // STUB
+  public Block mine(Transaction t) {
+    return new Block(this.numBlocks++, t, getHash(), this.validator);
   } // mine(Transaction)
 
   /**
@@ -55,7 +105,7 @@ public class BlockChain implements Iterable<Transaction> {
    * @return the number of blocks in the chain, including the initial block.
    */
   public int getSize() {
-    return 2;   // STUB
+    return this.numBlocks;
   } // getSize()
 
   /**
@@ -68,8 +118,11 @@ public class BlockChain implements Iterable<Transaction> {
    *   the hash is not appropriate for the contents, or (c) the previous
    *   hash is incorrect.
    */
-  public void append(Block blk) {
-    // STUB
+  public void append(Block blk) throws IllegalArgumentException {
+    if (!validator.isValid(blk.getHash()) || !validHashContents(blk) || !blk.getPrevHash().equals(getHash())) {
+      throw new IllegalArgumentException();
+    } // if
+    // STOPPED HERE. REMINDER FOR MYSELF TO CONTINUE WORK HERE.
   } // append()
 
   /**
