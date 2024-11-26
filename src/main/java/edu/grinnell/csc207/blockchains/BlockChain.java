@@ -22,6 +22,11 @@ public class BlockChain implements Iterable<Transaction> {
    */
   Block firstBlock;
 
+  /**
+   * The last block in the blockchain.
+   */
+  Block lastBlock;
+
   // HashValidator simpleValidator;
 
   // HashValidator standardValidator =
@@ -46,13 +51,12 @@ public class BlockChain implements Iterable<Transaction> {
    */
   public BlockChain(HashValidator check) {
     this.firstBlock = new Block(0, new Transaction("", "", 0), new Hash(new byte[] {}), check);
-    // simpleValidator = (hash) -> (hash.length() >= 1) && (hash.get(0) == 0);
-    // standardValidator =
-    //   (hash) -> (hash.length() >= 3) && (hash.get(0) == 0)
-    //   && (hash.get(1) == 0) && (hash.get(2) == 0);
-    this.validator = check;
     this.userNames = new ArrayList<String>();
     numBlocks = 1;
+    firstBlock.next = null;
+    this.lastBlock = firstBlock;
+    userNames.add(firstBlock.getTransaction().getSource());
+    this.validator = check;
   } // BlockChain(HashValidator)
 
   // +---------+-----------------------------------------------------
@@ -81,6 +85,29 @@ public class BlockChain implements Iterable<Transaction> {
     } // try/catch
     return true;
   }
+
+  /**
+   * Helper method used in finding the previous block of a given block.
+   * Returns the block with the given blockNum by iterating through the blockchain
+   * and finding the block with the given blockNum.
+   * @param blockNum the number of the block.
+   * @return the block with the given blockNum.
+   */
+  public Block getBlock (int blockNum) {
+    Iterator<Block> iterator = this.blocks();
+    if (firstBlock.blockNum == blockNum) {
+      return firstBlock;
+    } // if
+    Block block = null;
+    while (iterator.hasNext()) {
+      Block next = iterator.next();
+      if (next.blockNum == blockNum) {
+        block = next;
+        break;
+      } // if
+    } // while
+    return block;
+  } // getPreviousBlock(int)
 
   // +---------+-----------------------------------------------------
   // | Methods |
@@ -122,7 +149,10 @@ public class BlockChain implements Iterable<Transaction> {
     if (!validator.isValid(blk.getHash()) || !validHashContents(blk) || !blk.getPrevHash().equals(getHash())) {
       throw new IllegalArgumentException();
     } // if
-    // STOPPED HERE. REMINDER FOR MYSELF TO CONTINUE WORK HERE.
+    this.lastBlock.next = blk;
+    this.lastBlock = blk;
+    this.userNames.add(blk.getTransaction().getSource());
+    numBlocks++;
   } // append()
 
   /**
@@ -133,16 +163,23 @@ public class BlockChain implements Iterable<Transaction> {
    *   is removed).
    */
   public boolean removeLast() {
-    return true;        // STUB
+    if (numBlocks == 1) {
+      return false;
+    } // if
+    Block prevBlock = getBlock(numBlocks - 2);
+    lastBlock = prevBlock;
+    lastBlock.next = null;
+    numBlocks--;
+    return true;
   } // removeLast()
 
   /**
    * Get the hash of the last block in the chain.
    *
-   * @return the hash of the last sblock in the chain.
+   * @return the hash of the last block in the chain.
    */
   public Hash getHash() {
-    return new Hash(new byte[] {2, 0, 7});   // STUB
+    return lastBlock.getHash();
   } // getHash()
 
   /**
@@ -154,7 +191,8 @@ public class BlockChain implements Iterable<Transaction> {
    * @return true if the blockchain is correct and false otherwise.
    */
   public boolean isCorrect() {
-    return true;        // STUB
+    // I STOPPED HERE. REMINDER FOR ME TO CONTINUE WORK HERE LATER.
+    return false;
   } // isCorrect()
 
   /**
@@ -207,12 +245,15 @@ public class BlockChain implements Iterable<Transaction> {
    */
   public Iterator<Block> blocks() {
     return new Iterator<Block>() {
+      Block current = firstBlock;
       public boolean hasNext() {
-        return false;   // STUB
+        return current.next == null;
       } // hasNext()
 
       public Block next() {
-        throw new NoSuchElementException();     // STUB
+        Block temp = current;
+        current = current.next;
+        return temp;
       } // next()
     };
   } // blocks()

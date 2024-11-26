@@ -45,6 +45,11 @@ public class Block {
    */
   HashValidator validator;
 
+  /**
+   * Pointer to the next block in the blockchain.
+   */
+  Block next;
+
   // +--------------+------------------------------------------------
   // | Constructors |
   // +--------------+
