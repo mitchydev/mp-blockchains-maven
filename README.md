@@ -10,6 +10,6 @@ Authors
 
 Acknowledgements
 
-* _Forthcoming_.
+* Documentation for this Mini Project was provided by Samuel Rebelsky
 
 This code may be found at <https://github.com/mitchydev/mp-blockchains-maven>. The original code may be found at <https://github.com/Grinnell-CSC207/mp-blockchinas-maven>.
