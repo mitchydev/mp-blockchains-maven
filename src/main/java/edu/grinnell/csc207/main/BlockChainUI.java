@@ -185,6 +185,7 @@ public class BlockChainUI {
           while (users.hasNext()) {
             pen.println(users.next());
           }
+          break;
 
         default:
           pen.printf("invalid command: '%s'. Try again.\n", command);
