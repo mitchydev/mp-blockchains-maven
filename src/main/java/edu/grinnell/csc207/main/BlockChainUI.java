@@ -4,6 +4,7 @@ import edu.grinnell.csc207.blockchains.Block;
 import edu.grinnell.csc207.blockchains.BlockChain;
 import edu.grinnell.csc207.blockchains.HashValidator;
 import edu.grinnell.csc207.blockchains.Transaction;
+import edu.grinnell.csc207.blockchains.Hash;
 
 import edu.grinnell.csc207.util.IOUtils;
 
@@ -100,11 +101,30 @@ public class BlockChainUI {
 
       switch (command.toLowerCase()) {
         case "append":
-          pen.printf("Command '%s' is not yet implemented", command);
+          source = IOUtils.readLine(pen, eyes, "Source (return for deposit): ");
+          target = IOUtils.readLine(pen, eyes, "Target: ");
+          String amountInput = IOUtils.readLine(pen, eyes, "Amount: ");
+          long nonce = IOUtils.readLong(pen, eyes, "Nonce: ");
+          try {
+            int amounts = Integer.parseInt(amountInput);
+            Transaction transaction = new Transaction(source, amountInput, amounts);
+            int bNum = chain.getSize();
+            Hash prevHash = chain.getHash();
+
+            Block block = new Block(bNum, transaction, prevHash, nonce);
+
+            chain.append(block);
+            pen.println("Appended: " + block.toString());
+          } catch (NumberFormatException exception) {
+            pen.println("Invalid amount!");
+          } catch (Exception exception) {
+            pen.println("Error appending the block.");
+          }
           break;
 
         case "balance":
-          pen.printf("Command '%s' is not yet implemented", command);
+          String currBal = IOUtils.readLine(pen, eyes, "User: ");
+          pen.printf("%'s balance is %d\n", currBal, chain.balance(currBal));
           break;
 
         case "blocks":
@@ -112,7 +132,12 @@ public class BlockChainUI {
           break;
 
         case "check":
-          pen.printf("Command '%s' is not yet implemented", command);
+          try {
+            chain.check();
+            pen.println("The blockchain checks out.");
+          } catch (Exception exception) {
+            pen.println("The blockchain is invalid.");
+          }
           break;
 
         case "help":
@@ -132,7 +157,11 @@ public class BlockChainUI {
           break;
 
         case "remove":
-          pen.printf("Command '%s' is not yet implemented", command);
+          if (chain.removeLast()) {
+            pen.println("The last block was removed.");
+          } else {
+            pen.println("Unable to remove the last block.");
+          }
           break;
 
         case "transactions":
