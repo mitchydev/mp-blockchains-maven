@@ -192,8 +192,29 @@ public class BlockChain implements Iterable<Transaction> {
    * @return true if the blockchain is correct and false otherwise.
    */
   public boolean isCorrect() {
-    // I STOPPED HERE. REMINDER FOR ME TO CONTINUE WORK HERE LATER.
-    return false;
+    Iterator<Block> iterator = this.blocks();
+    Block next = firstBlock;
+    int blockNum = 0;
+    boolean secondBlockCheck = true;
+    while (iterator.hasNext()) {
+      next = iterator.next();
+      blockNum++;
+      if (secondBlockCheck) {
+        secondBlockCheck = false;
+        if (!next.getTransaction().getSource().equals("") ||
+          !next.getPrevHash().equals(firstBlock.getHash()) ||
+          !validHashContents(next) || !this.validator.isValid(next.getHash())) {
+          return false;
+        } // if
+      } else {
+        if (!validTransaction(next.getTransaction()) ||
+          !next.getPrevHash().equals(getBlock(blockNum).getHash()) ||
+          !validHashContents(next) || !this.validator.isValid(next.getHash())) {
+          return false;
+        } // if
+      } // if
+    } // while
+    return true;
   } // isCorrect()
 
   /**
@@ -206,7 +227,37 @@ public class BlockChain implements Iterable<Transaction> {
    *   If things are wrong at any block.
    */
   public void check() throws Exception {
-    // STUB
+    Iterator<Block> iterator = this.blocks();
+    Block next = firstBlock;
+    int blockNum = 0;
+    boolean secondBlockCheck = true;
+    while (iterator.hasNext()) {
+      next = iterator.next();
+      blockNum++;
+      if (secondBlockCheck) {
+        secondBlockCheck = false;
+        if (!next.getTransaction().getSource().equals("")) {
+          throw new Exception("The first block added to the chain should not have a source name.");
+        } else if (!next.getPrevHash().equals(this.firstBlock.getHash())) {
+          throw new Exception("The first block added to the chain has an invalid prevHash value.");
+        } else if (!validHashContents(next)) {
+          throw new Exception("The first block added to the chain's contents do not match its hash value.");
+        } else if (!this.validator.isValid(next.getHash())) {
+          throw new Exception("The first block added to the chain has an invalid hash value.");
+        } // if
+      } else {
+        if (!validTransaction(next.getTransaction())) {
+          throw new Exception("Block number " + blockNum + "'s transaction is incorrect.");
+        } else if (!next.getPrevHash().equals(getBlock(blockNum).getHash())) {
+          throw new Exception("Block number " + blockNum + "'s prevHash value does not match block" +
+            (blockNum - 1) + "'s hash value.");
+        } else if (!validHashContents(next)) {
+          throw new Exception("Block number " + blockNum + "'s contents do not match its hash value.");
+        } else if (!this.validator.isValid(next.getHash())) {
+          throw new Exception("Block number " + blockNum + "'s hash value is invalid.");
+        } // if
+      } // if
+    } // while
   } // check()
 
   /**
