@@ -101,7 +101,8 @@ public class BlockChain implements Iterable<Transaction> {
       return true;
     } else if (!userNames.contains(transaction.getSource())) {
       return false;
-    } else if (balance(transaction.getSource()) < transaction.getAmount()) {
+    } else if ((balance(transaction.getSource()) + transaction.getAmount())
+        < transaction.getAmount()) {
       return false;
     } // if
     return true;

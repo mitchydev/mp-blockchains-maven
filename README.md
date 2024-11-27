@@ -1,6 +1,6 @@
 # mp-blockchains-maven
 
-An exploration of blockchains in Java.
+An exploration of blockchains in Java. Allows users to perform transactions between one another using blocks. Mimics a cryptographic hashing mechanism to make transactions secure and hard-to-find.
 
 Authors
 

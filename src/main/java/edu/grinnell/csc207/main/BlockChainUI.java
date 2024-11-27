@@ -28,7 +28,7 @@ public class BlockChainUI {
   /**
    * The number of bytes we validate. Should be set to 3 before submitting.
    */
-  static final int VALIDATOR_BYTES = 0;
+  static final int VALIDATOR_BYTES = 3;
 
   // +---------+-----------------------------------------------------
   // | Helpers |
@@ -119,7 +119,7 @@ public class BlockChainUI {
           } catch (NumberFormatException exception) {
             pen.println("Invalid amount!");
           } catch (Exception exception) {
-            pen.println("Error appending the block.");
+            pen.println("Could not append: Invalid hash in appended block.");
           } // try/catch
           break;
 
@@ -157,7 +157,8 @@ public class BlockChainUI {
           target = IOUtils.readLine(pen, eyes, "Target: ");
           amount = IOUtils.readInt(pen, eyes, "Amount: ");
           Block b = chain.mine(new Transaction(source, target, amount));
-          pen.println("Nonce: " + b.getNonce());
+          pen.println();
+          pen.println("Use nonce: " + b.getNonce());
           break;
 
         case "quit":
