@@ -120,7 +120,7 @@ public class BlockChainUI {
             pen.println("Invalid amount!");
           } catch (Exception exception) {
             pen.println("Error appending the block.");
-          }
+          } // try/catch
           break;
 
         case "balance":
@@ -136,7 +136,7 @@ public class BlockChainUI {
             Block block = blockIterator.next();
             pen.println(block.toString());
             i++;
-          }
+          } // while
           break;
 
         case "check":
@@ -145,7 +145,7 @@ public class BlockChainUI {
             pen.println("The blockchain checks out.");
           } catch (Exception exception) {
             pen.println("The blockchain is invalid.");
-          }
+          } // try/catch
           break;
 
         case "help":
@@ -169,7 +169,7 @@ public class BlockChainUI {
             pen.println("The last block was removed.");
           } else {
             pen.println("Unable to remove the last block.");
-          }
+          } // if
           break;
 
         case "transactions":
@@ -177,14 +177,14 @@ public class BlockChainUI {
           Iterator<Transaction> transactions = chain.iterator();
           while (transactions.hasNext()) {
             pen.println(transactions.next());
-          }
+          } // while
           break;
 
         case "users":
           Iterator<String> users = chain.users();
           while (users.hasNext()) {
             pen.println(users.next());
-          }
+          } // while
           break;
 
         default:

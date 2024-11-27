@@ -14,6 +14,9 @@ public class Hash {
   // | Fields |
   // +--------+
 
+  /**
+   * The data bytes that the Hash will carry.
+   */
   private final byte[] data;
 
   // +--------------+------------------------------------------------

@@ -132,7 +132,8 @@ public class Block {
    */
   Hash computeHash() throws NoSuchAlgorithmException {
     byte[] blockNumBytes = ByteBuffer.allocate(Integer.BYTES).putInt(this.blockNum).array();
-    byte[] amountBytes = ByteBuffer.allocate(Integer.BYTES).putInt(this.transaction.getAmount()).array();
+    byte[] amountBytes = ByteBuffer.allocate(Integer.BYTES).putInt(
+        this.transaction.getAmount()).array();
     MessageDigest md = MessageDigest.getInstance("sha-256");
     md.update(blockNumBytes);
     md.update(this.transaction.getSource().getBytes());
@@ -202,15 +203,15 @@ public class Block {
    */
   public String toString() {
     if (this.transaction.getSource().equals("")) {
-      return ("Block " + this.blockNum + " (Transaction: [Deposit, Target " +
-        this.transaction.getTarget() + ", Amount: " + this.transaction.getAmount() +
-        "], Nonce: " + this.getNonce() + ", prevHash: " + this.getPrevHash().toString() +
-        ", hash: " + this.getHash().toString() + ")");
+      return ("Block " + this.blockNum + " (Transaction: [Deposit, Target "
+        + this.transaction.getTarget() + ", Amount: " + this.transaction.getAmount()
+        + "], Nonce: " + this.getNonce() + ", prevHash: " + this.getPrevHash().toString()
+        + ", hash: " + this.getHash().toString() + ")");
     } else {
-      return ("Block " + this.blockNum + " (Transaction: [Source: " + this.transaction.getSource() +
-        ", Target " + this.transaction.getTarget() + ", Amount: " + this.transaction.getAmount() +
-        "], Nonce: " + this.getNonce() + ", prevHash: " + this.getPrevHash().toString() +
-        ", hash: " + this.getHash().toString() + ")");
+      return ("Block " + this.blockNum + " (Transaction: [Source: " + this.transaction.getSource()
+        + ", Target " + this.transaction.getTarget() + ", Amount: " + this.transaction.getAmount()
+        + "], Nonce: " + this.getNonce() + ", prevHash: " + this.getPrevHash().toString()
+        + ", hash: " + this.getHash().toString() + ")");
     } // if
   } // toString()
 } // class Block

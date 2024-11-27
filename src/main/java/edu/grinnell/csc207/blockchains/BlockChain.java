@@ -1,16 +1,12 @@
 package edu.grinnell.csc207.blockchains;
 
 import java.security.NoSuchAlgorithmException;
-import edu.grinnell.csc207.blockchains.Block;
 import edu.grinnell.csc207.util.AssociativeArray;
 import edu.grinnell.csc207.util.KeyNotFoundException;
 import edu.grinnell.csc207.util.NullKeyException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
-
-import javax.swing.TransferHandler.TransferSupport;
 
 /**
  * A full blockchain.
@@ -39,14 +35,31 @@ public class BlockChain implements Iterable<Transaction> {
   //   (hash) -> (hash.length() >= 3) && (hash.get(0) == 0)
   //     && (hash.get(1) == 0) && (hash.get(2) == 0);
 
+  /**
+   * The Hashvalidator that will be used to check if Hash values are valid.
+   */
   HashValidator validator;
 
+  /**
+   * Stores all the usernames being used in a blockchain.
+   */
   ArrayList<String> userNames;
 
+  /**
+   * Stores all the transactions made in the blockchain.
+   */
   ArrayList<Transaction> allTransactions;
 
+  /**
+   * Stores the number of blocks in the blockchain, inclduing the first block
+   * created in the constructor.
+   */
   int numBlocks;
 
+  /**
+   * Stores the balances of each user in the blockchain in key, value pairs.
+   * The key is the user's name and the value is the available balance.
+   */
   AssociativeArray<String, Integer> userBalances;
 
   // +--------------+------------------------------------------------
@@ -60,7 +73,8 @@ public class BlockChain implements Iterable<Transaction> {
    *   The validator used to check elements.
    */
   public BlockChain(HashValidator check) {
-    this.firstBlock = new Block(0, new Transaction("", "", 0), new Hash(new byte[] {}), check);
+    this.firstBlock = new Block(0, new Transaction("", "", 0),
+        new Hash(new byte[] {}), check);
     this.userNames = new ArrayList<String>();
     allTransactions = new ArrayList<Transaction>();
     userBalances = new AssociativeArray<String, Integer>();
@@ -74,9 +88,17 @@ public class BlockChain implements Iterable<Transaction> {
   // | Helpers |
   // +---------+
 
-  public boolean validTransaction (Transaction transaction) {
+  /**
+   * Checks if a given transaction is valid based on available users and
+   * user balances.
+   * @param transaction the transaction to be checked.
+   * @return true if the transaction is valid, false if not.
+   */
+  public boolean validTransaction(Transaction transaction) {
     if (transaction.getAmount() < 0) {
       return false;
+    } else if (transaction.getSource().equals("")) {
+      return true;
     } else if (!userNames.contains(transaction.getSource())) {
       return false;
     } else if (balance(transaction.getSource()) < transaction.getAmount()) {
@@ -85,7 +107,14 @@ public class BlockChain implements Iterable<Transaction> {
     return true;
   } // validTransaction(Transaction)
 
-  public boolean validHashContents (Block blk) {
+  /**
+   * Checks if a hash contains the correct bytes according to the data in its block.
+   * Creates a correct hash value for the block and checks if it is equal to the
+   * block's actual Hash.
+   * @param blk The block containing the hash to be checked.
+   * @return true if the hash contains the correct contents, false if not.
+   */
+  public boolean validHashContents(Block blk) {
     try {
       Hash correctHash = blk.computeHash();
       if (!blk.getHash().equals(correctHash)) {
@@ -97,6 +126,14 @@ public class BlockChain implements Iterable<Transaction> {
     return true;
   } // validHashContents(Block)
 
+  /**
+   * Updates the user balances associative array based on the values in the
+   * given transaction. Changes the source and target's user balances based
+   * on the order of the transactions in the blockchain and the amount of
+   * the transaction.
+   * @param transaction the transaction that the balances will be updated
+   * based upon.
+   */
   public void updateUserBalances(Transaction transaction) {
     if (transaction.getSource().equals("")) {
       if (!userNames.contains(transaction.getTarget())) {
@@ -108,7 +145,8 @@ public class BlockChain implements Iterable<Transaction> {
         } // try/catch
       } else {
         try {
-          int updatedBalance = userBalances.get(transaction.getTarget()) + transaction.getAmount();
+          int updatedBalance = userBalances.get(transaction.getTarget())
+              + transaction.getAmount();
           userBalances.set(transaction.getTarget(), updatedBalance);
         } catch (Exception e) {
           // Does nothing.
@@ -118,19 +156,25 @@ public class BlockChain implements Iterable<Transaction> {
       if (!userNames.contains(transaction.getTarget())) {
         userNames.add(transaction.getTarget());
         try {
-          userBalances.set(transaction.getTarget(), 0);
-        } catch (NullKeyException e) {
+          userBalances.set(transaction.getTarget(), transaction.getAmount());
+          int updatedSourceBalance = userBalances.get(transaction.getSource())
+              - transaction.getAmount();
+          userBalances.set(transaction.getSource(), updatedSourceBalance);
+        } catch (Exception e) {
           // Does nothing.
         } //
+      } else {
+        try {
+          int updatedSourceBalance = userBalances.get(transaction.getSource())
+              - transaction.getAmount();
+          userBalances.set(transaction.getSource(), updatedSourceBalance);
+          int updatedTargetBalance = userBalances.get(transaction.getTarget())
+              + transaction.getAmount();
+          userBalances.set(transaction.getTarget(), updatedTargetBalance);
+        } catch (Exception e) {
+          // Does Nothing.
+        } // try/catch
       } // if
-      try {
-        int updatedSourceBalance = userBalances.get(transaction.getSource()) - transaction.getAmount();
-        userBalances.set(transaction.getSource(), updatedSourceBalance);
-        int updatedTargetBalance = userBalances.get(transaction.getTarget()) + transaction.getAmount();
-        userBalances.set(transaction.getTarget(), updatedTargetBalance);
-      } catch (Exception e) {
-        // Does Nothing.
-      } // try/catch
     } // if
   } // updateUserBalances(Transaction)
 
@@ -141,7 +185,7 @@ public class BlockChain implements Iterable<Transaction> {
    * @param blockNum the number of the block.
    * @return the block with the given blockNum.
    */
-  public Block getBlock (int blockNum) {
+  public Block getBlock(int blockNum) {
     Iterator<Block> iterator = this.blocks();
     if (firstBlock.blockNum == blockNum) {
       return firstBlock;
@@ -194,7 +238,8 @@ public class BlockChain implements Iterable<Transaction> {
    *   hash is incorrect.
    */
   public void append(Block blk) throws IllegalArgumentException {
-    if (!validator.isValid(blk.getHash()) || !validHashContents(blk) || !blk.getPrevHash().equals(getHash())) {
+    if (!validator.isValid(blk.getHash()) || !validHashContents(blk)
+        || !blk.getPrevHash().equals(getHash())) {
       throw new IllegalArgumentException();
     } // if
     this.lastBlock.next = blk;
@@ -217,8 +262,17 @@ public class BlockChain implements Iterable<Transaction> {
     } // if
     // Sets the user in the last block's balance to 0.
     try {
-      int userBalance = userBalances.get(lastBlock.getTransaction().getTarget());
-      userBalances.set(lastBlock.getTransaction().getTarget(), userBalance - userBalance);
+      if (lastBlock.getTransaction().getSource().equals("")) {
+        int userBalance = userBalances.get(lastBlock.getTransaction().getTarget());
+        userBalances.set(lastBlock.getTransaction().getTarget(), userBalance - userBalance);
+      } else {
+        int newSourceBalance = userBalances.get(lastBlock.getTransaction().getSource())
+            + lastBlock.getTransaction().getAmount();
+        userBalances.set(lastBlock.getTransaction().getSource(), newSourceBalance);
+        int newTargetBalance = userBalances.get(lastBlock.getTransaction().getTarget())
+            - lastBlock.getTransaction().getAmount();
+        userBalances.set(lastBlock.getTransaction().getTarget(), newTargetBalance);
+      } // if
     } catch (Exception e) {
       // Does nothing.
     } // try/catch
@@ -261,15 +315,15 @@ public class BlockChain implements Iterable<Transaction> {
       blockNum++;
       if (secondBlockCheck) {
         secondBlockCheck = false;
-        if (!next.getTransaction().getSource().equals("") ||
-          !next.getPrevHash().equals(firstBlock.getHash()) ||
-          !validHashContents(next) || !this.validator.isValid(next.getHash())) {
+        if (!next.getTransaction().getSource().equals("")
+            || !next.getPrevHash().equals(firstBlock.getHash())
+            || !validHashContents(next) || !this.validator.isValid(next.getHash())) {
           return false;
         } // if
       } else {
-        if (!validTransaction(next.getTransaction()) ||
-          !next.getPrevHash().equals(getBlock(blockNum).getHash()) ||
-          !validHashContents(next) || !this.validator.isValid(next.getHash())) {
+        if (!validTransaction(next.getTransaction())
+            || !next.getPrevHash().equals(getBlock(blockNum - 1).getHash())
+            || !validHashContents(next) || !this.validator.isValid(next.getHash())) {
           return false;
         } // if
       } // if
@@ -303,20 +357,23 @@ public class BlockChain implements Iterable<Transaction> {
         if (!next.getTransaction().getSource().equals("")) {
           throw new Exception("The first block added to the chain should not have a source name.");
         } else if (!next.getPrevHash().equals(this.firstBlock.getHash())) {
-          throw new Exception("The first block added to the chain has an invalid prevHash value.");
+          throw new Exception(
+            "The first block added to the chain has an invalid prevHash value.");
         } else if (!validHashContents(next)) {
-          throw new Exception("The first block added to the chain's contents do not match its hash value.");
+          throw new Exception(
+            "The first block added to the chain's contents do not match its hash value.");
         } else if (!this.validator.isValid(next.getHash())) {
           throw new Exception("The first block added to the chain has an invalid hash value.");
         } // if
       } else {
         if (!validTransaction(next.getTransaction())) {
           throw new Exception("Block number " + blockNum + "'s transaction is incorrect.");
-        } else if (!next.getPrevHash().equals(getBlock(blockNum).getHash())) {
-          throw new Exception("Block number " + blockNum + "'s prevHash value does not match block" +
-            (blockNum - 1) + "'s hash value.");
+        } else if (!next.getPrevHash().equals(getBlock(blockNum - 1).getHash())) {
+          throw new Exception("Block number " + blockNum + "'s prevHash value does not match block"
+              + (blockNum - 1) + "'s hash value.");
         } else if (!validHashContents(next)) {
-          throw new Exception("Block number " + blockNum + "'s contents do not match its hash value.");
+          throw new Exception("Block number " + blockNum
+              + "'s contents do not match its hash value.");
         } else if (!this.validator.isValid(next.getHash())) {
           throw new Exception("Block number " + blockNum + "'s hash value is invalid.");
         } // if
@@ -357,7 +414,7 @@ public class BlockChain implements Iterable<Transaction> {
       balance = userBalances.get(user);
     } catch (KeyNotFoundException e) {
       // Do nothing.
-    }
+    } // try/catch
     return balance;
   } // balance()
 
@@ -373,7 +430,7 @@ public class BlockChain implements Iterable<Transaction> {
         if (current == null) {
           return false;
         } // if
-        return true; 
+        return true;
       } // hasNext()
 
       public Block next() {
