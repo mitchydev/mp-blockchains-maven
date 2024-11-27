@@ -108,14 +108,20 @@ public class BlockChain implements Iterable<Transaction> {
         } // try/catch
       } else {
         try {
-          userBalances.set(transaction.getTarget(), transaction.getAmount());
-        } catch (NullKeyException e) {
+          int updatedBalance = userBalances.get(transaction.getTarget()) + transaction.getAmount();
+          userBalances.set(transaction.getTarget(), updatedBalance);
+        } catch (Exception e) {
           // Does nothing.
         } // try/catch
       } // if
     } else {
       if (!userNames.contains(transaction.getTarget())) {
         userNames.add(transaction.getTarget());
+        try {
+          userBalances.set(transaction.getTarget(), 0);
+        } catch (NullKeyException e) {
+          // Does nothing.
+        } //
       } // if
       try {
         int updatedSourceBalance = userBalances.get(transaction.getSource()) - transaction.getAmount();
@@ -165,7 +171,7 @@ public class BlockChain implements Iterable<Transaction> {
    * @return a new block with correct number, hashes, and such.
    */
   public Block mine(Transaction t) {
-    return new Block(this.numBlocks++, t, getHash(), this.validator);
+    return new Block(this.numBlocks, t, getHash(), this.validator);
   } // mine(Transaction)
 
   /**
@@ -209,6 +215,14 @@ public class BlockChain implements Iterable<Transaction> {
     if (numBlocks == 1) {
       return false;
     } // if
+    // Sets the user in the last block's balance to 0.
+    try {
+      int userBalance = userBalances.get(lastBlock.getTransaction().getTarget());
+      userBalances.set(lastBlock.getTransaction().getTarget(), userBalance - userBalance);
+    } catch (Exception e) {
+      // Does nothing.
+    } // try/catch
+
     Block prevBlock = getBlock(numBlocks - 2);
     lastBlock = prevBlock;
     lastBlock.next = null;
@@ -234,8 +248,12 @@ public class BlockChain implements Iterable<Transaction> {
    * @return true if the blockchain is correct and false otherwise.
    */
   public boolean isCorrect() {
+    if (this.numBlocks == 1) {
+      return true;
+    } // if
     Iterator<Block> iterator = this.blocks();
     Block next = firstBlock;
+    next = iterator.next();
     int blockNum = 0;
     boolean secondBlockCheck = true;
     while (iterator.hasNext()) {
@@ -269,8 +287,12 @@ public class BlockChain implements Iterable<Transaction> {
    *   If things are wrong at any block.
    */
   public void check() throws Exception {
+    if (this.numBlocks == 1) {
+      return;
+    } // if
     Iterator<Block> iterator = this.blocks();
     Block next = firstBlock;
+    next = iterator.next();
     int blockNum = 0;
     boolean secondBlockCheck = true;
     while (iterator.hasNext()) {
@@ -312,7 +334,7 @@ public class BlockChain implements Iterable<Transaction> {
     return new Iterator<String>() {
       int index = 0;
       public boolean hasNext() {
-        return (userNames.size() >= index);
+        return (userNames.size() >= index + 1);
       } // hasNext()
 
       public String next() {
@@ -330,13 +352,13 @@ public class BlockChain implements Iterable<Transaction> {
    * @return that user's balance (or 0, if the user is not in the system).
    */
   public int balance(String user) {
+    int balance = 0;
     try {
-      return userBalances.get(user);
+      balance = userBalances.get(user);
     } catch (KeyNotFoundException e) {
       // Do nothing.
     }
-    // The method should never reach this line of code.
-    return Integer.MAX_VALUE;
+    return balance;
   } // balance()
 
   /**
@@ -348,7 +370,10 @@ public class BlockChain implements Iterable<Transaction> {
     return new Iterator<Block>() {
       Block current = firstBlock;
       public boolean hasNext() {
-        return current.next == null;
+        if (current == null) {
+          return false;
+        } // if
+        return true; 
       } // hasNext()
 
       public Block next() {
@@ -368,7 +393,7 @@ public class BlockChain implements Iterable<Transaction> {
     return new Iterator<Transaction>() {
       int index = 0;
       public boolean hasNext() {
-        return (allTransactions.size() >= index);
+        return (allTransactions.size() >= index + 1);
       } // hasNext()
 
       public Transaction next() {
