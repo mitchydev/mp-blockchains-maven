@@ -7,6 +7,7 @@ import edu.grinnell.csc207.blockchains.Transaction;
 import edu.grinnell.csc207.blockchains.Hash;
 
 import edu.grinnell.csc207.util.IOUtils;
+import java.util.Iterator;
 
 import java.io.PrintWriter;
 import java.io.BufferedReader;
@@ -107,7 +108,7 @@ public class BlockChainUI {
           long nonce = IOUtils.readLong(pen, eyes, "Nonce: ");
           try {
             int amounts = Integer.parseInt(amountInput);
-            Transaction transaction = new Transaction(source, amountInput, amounts);
+            Transaction transaction = new Transaction(source, target, amounts);
             int bNum = chain.getSize();
             Hash prevHash = chain.getHash();
 
@@ -123,12 +124,19 @@ public class BlockChainUI {
           break;
 
         case "balance":
-          String currBal = IOUtils.readLine(pen, eyes, "User: ");
-          pen.printf("%'s balance is %d\n", currBal, chain.balance(currBal));
+          String user = IOUtils.readLine(pen, eyes, "User: ");
+          pen.printf("%s's balance is %d\n", user, chain.balance(user));
           break;
 
         case "blocks":
-          pen.printf("Command '%s' is not yet implemented", command);
+          pen.println("Blocks:");
+          Iterator<Block> blockIterator = chain.blocks();
+          int i = 0;
+          while (blockIterator.hasNext()) {
+            Block block = blockIterator.next();
+            pen.println(block.toString());
+            i++;
+          }
           break;
 
         case "check":
@@ -165,12 +173,18 @@ public class BlockChainUI {
           break;
 
         case "transactions":
-          pen.printf("Command '%s' is not yet implemented", command);
+          pen.println("Transactions:");
+          Iterator<Transaction> transactions = chain.iterator();
+          while (transactions.hasNext()) {
+            pen.println(transactions.next());
+          }
           break;
 
         case "users":
-          pen.printf("Command '%s' is not yet implemented", command);
-          break;
+          Iterator<String> users = chain.users();
+          while (users.hasNext()) {
+            pen.println(users.next());
+          }
 
         default:
           pen.printf("invalid command: '%s'. Try again.\n", command);
