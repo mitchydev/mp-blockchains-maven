@@ -2,10 +2,15 @@ package edu.grinnell.csc207.blockchains;
 
 import java.security.NoSuchAlgorithmException;
 import edu.grinnell.csc207.blockchains.Block;
+import edu.grinnell.csc207.util.AssociativeArray;
+import edu.grinnell.csc207.util.KeyNotFoundException;
+import edu.grinnell.csc207.util.NullKeyException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import javax.swing.TransferHandler.TransferSupport;
 
 /**
  * A full blockchain.
@@ -38,7 +43,11 @@ public class BlockChain implements Iterable<Transaction> {
 
   ArrayList<String> userNames;
 
+  ArrayList<Transaction> allTransactions;
+
   int numBlocks;
+
+  AssociativeArray<String, Integer> userBalances;
 
   // +--------------+------------------------------------------------
   // | Constructors |
@@ -53,10 +62,11 @@ public class BlockChain implements Iterable<Transaction> {
   public BlockChain(HashValidator check) {
     this.firstBlock = new Block(0, new Transaction("", "", 0), new Hash(new byte[] {}), check);
     this.userNames = new ArrayList<String>();
+    allTransactions = new ArrayList<Transaction>();
+    userBalances = new AssociativeArray<String, Integer>();
     numBlocks = 1;
     firstBlock.next = null;
     this.lastBlock = firstBlock;
-    userNames.add(firstBlock.getTransaction().getSource());
     this.validator = check;
   } // BlockChain(HashValidator)
 
@@ -85,7 +95,38 @@ public class BlockChain implements Iterable<Transaction> {
       // Does nothing
     } // try/catch
     return true;
-  }
+  } // validHashContents(Block)
+
+  public void updateUserBalances(Transaction transaction) {
+    if (transaction.getSource().equals("")) {
+      if (!userNames.contains(transaction.getTarget())) {
+        userNames.add(transaction.getTarget());
+        try {
+          userBalances.set(transaction.getTarget(), transaction.getAmount());
+        } catch (NullKeyException e) {
+          // Does nothing.
+        } // try/catch
+      } else {
+        try {
+          userBalances.set(transaction.getTarget(), transaction.getAmount());
+        } catch (NullKeyException e) {
+          // Does nothing.
+        } // try/catch
+      } // if
+    } else {
+      if (!userNames.contains(transaction.getTarget())) {
+        userNames.add(transaction.getTarget());
+      } // if
+      try {
+        int updatedSourceBalance = userBalances.get(transaction.getSource()) - transaction.getAmount();
+        userBalances.set(transaction.getSource(), updatedSourceBalance);
+        int updatedTargetBalance = userBalances.get(transaction.getTarget()) + transaction.getAmount();
+        userBalances.set(transaction.getTarget(), updatedTargetBalance);
+      } catch (Exception e) {
+        // Does Nothing.
+      } // try/catch
+    } // if
+  } // updateUserBalances(Transaction)
 
   /**
    * Helper method used in finding the previous block of a given block.
@@ -152,7 +193,8 @@ public class BlockChain implements Iterable<Transaction> {
     } // if
     this.lastBlock.next = blk;
     this.lastBlock = blk;
-    this.userNames.add(blk.getTransaction().getSource());
+    updateUserBalances(blk.getTransaction());
+    allTransactions.add(blk.getTransaction());
     numBlocks++;
   } // append()
 
@@ -268,12 +310,13 @@ public class BlockChain implements Iterable<Transaction> {
    */
   public Iterator<String> users() {
     return new Iterator<String>() {
+      int index = 0;
       public boolean hasNext() {
-        return false;   // STUB
+        return (userNames.size() >= index);
       } // hasNext()
 
       public String next() {
-        throw new NoSuchElementException();     // STUB
+        return userNames.get(index++);
       } // next()
     };
   } // users()
@@ -287,7 +330,13 @@ public class BlockChain implements Iterable<Transaction> {
    * @return that user's balance (or 0, if the user is not in the system).
    */
   public int balance(String user) {
-    return 0;   // STUB
+    try {
+      return userBalances.get(user);
+    } catch (KeyNotFoundException e) {
+      // Do nothing.
+    }
+    // The method should never reach this line of code.
+    return Integer.MAX_VALUE;
   } // balance()
 
   /**
@@ -317,12 +366,13 @@ public class BlockChain implements Iterable<Transaction> {
    */
   public Iterator<Transaction> iterator() {
     return new Iterator<Transaction>() {
+      int index = 0;
       public boolean hasNext() {
-        return false;   // STUB
+        return (allTransactions.size() >= index);
       } // hasNext()
 
       public Transaction next() {
-        throw new NoSuchElementException();     // STUB
+        return allTransactions.get(index++);
       } // next()
     };
   } // iterator()
